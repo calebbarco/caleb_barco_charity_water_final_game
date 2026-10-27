@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ffffff">
+    <title>Your Leaderboard - charity: water</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="leaderboard.css">
+</head>
+<body class="leaderboard-page">
+    <header class="site-header leaderboard-header">
+        <a class="wordmark" href="index.html">
+            <img src="img/cw_logo.png" alt="charity: water home">
+        </a>
+    </header>
+
+    <main class="leaderboard-layout">
+        <div class="leaderboard-heading">
+            <div>
+                <p class="leaderboard-eyebrow">Water Dig!</p>
+                <h1>Your leaderboard</h1>
+            </div>
+            <nav class="leaderboard-actions" aria-label="Game navigation">
+                <a class="leaderboard-link play-link" href="game.html">Play again</a>
+                <a class="leaderboard-link home-link" href="index.html">Home</a>
+            </nav>
+        </div>
+
+        <p id="empty-state" class="empty-state" hidden>No finished attempts yet. Complete a game to see your results here.</p>
+        <div id="leaderboard-table-wrap" class="leaderboard-table-wrap" hidden>
+            <table class="leaderboard-table">
+                <caption class="visually-hidden">Your 20 most recent Water Dig! attempts, newest first</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Attempt</th>
+                        <th scope="col">Result</th>
+                        <th scope="col">Played</th>
+                        <th scope="col">Depth</th>
+                        <th scope="col">Water</th>
+                        <th scope="col">People helped</th>
+                        <th scope="col">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="leaderboard.js"></script>
+</body>
+</html>

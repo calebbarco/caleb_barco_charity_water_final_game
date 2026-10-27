@@ -7,3 +7,5 @@ This first version should focus on core functionality — clickable elements, sc
 ## Gameplay
 
 Start a round from the homepage. Use the arrow keys (or on-screen arrows) to move and Space (or the Dig button) to dig. Explore the endless underground to collect clean-water pockets, avoid dirty-water pockets and rocks, and return to the surface within one minute. The game tracks score, collected gallons, lives, time, and deepest depth reached.
+
+The leaderboard keeps the 20 most recent finished runs in this browser only; scores are not sent to a server.

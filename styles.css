@@ -108,11 +108,15 @@ body {
 }
 
 .leaderboard-button {
-    position: relative;
     padding: 0 18px;
     background: var(--cw-gray);
     color: var(--cw-charcoal);
-    cursor: not-allowed;
+    cursor: pointer;
+}
+
+.leaderboard-button:hover {
+    background: var(--cw-navy);
+    color: #fff;
 }
 
 .coming-soon {

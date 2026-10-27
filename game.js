@@ -7,6 +7,8 @@ const WATER_CAN_RESPAWN_DELAY = 10000;
 const DONATION_POINTS = 1000;
 const GAME_DURATION_SECONDS = 60;
 const FEET_PER_TILE = 25;
+const LEADERBOARD_STORAGE_KEY = 'waterDigAttempts';
+const MAX_SAVED_ATTEMPTS = 20;
 const DIRECTIONS = {
     up: { row: -1, column: 0 },
     down: { row: 1, column: 0 },
@@ -561,6 +563,10 @@ function loseLife(reason = 'A ghost caught you! You lost a life.', restartTimer 
 }
 
 function finishGame(completed, reason = '') {
+    if (gameIsOver) {
+        return;
+    }
+
     gameIsOver = true;
     window.clearInterval(ghostTimer);
     window.clearInterval(gameTimer);
@@ -568,6 +574,29 @@ function finishGame(completed, reason = '') {
     window.clearTimeout(waterCanRespawnTimeout);
     window.clearTimeout(donationNoticeTimeout);
     window.clearTimeout(gameAlertTimeout);
+
+    // Keep a small history of this player's runs in this browser.
+    try {
+        const savedAttempts = JSON.parse(localStorage.getItem(LEADERBOARD_STORAGE_KEY) || '[]');
+        const attempts = Array.isArray(savedAttempts) ? savedAttempts : [];
+        const depthInFeet = deepestRow * FEET_PER_TILE;
+        const peopleHelped = Math.round(score * 10.21);
+
+        attempts.push({
+            playedAt: new Date().toISOString(),
+            completed,
+            depth: depthInFeet,
+            people: peopleHelped,
+            score,
+            gallons
+        });
+        localStorage.setItem(
+            LEADERBOARD_STORAGE_KEY,
+            JSON.stringify(attempts.slice(-MAX_SAVED_ATTEMPTS))
+        );
+    } catch (error) {
+        console.warn('This run could not be saved to the local leaderboard.', error);
+    }
 
     if (completed) {
         const depthInFeet = deepestRow * FEET_PER_TILE;
