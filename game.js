@@ -191,10 +191,15 @@ function drawBoard() {
 
             if (player.row === worldRow && player.column === worldColumn) {
                 tile.insertAdjacentHTML('beforeend', `
-                    <span class="miner-avatar" aria-hidden="true">
+                    <span class="miner-avatar miner-facing-${facing}" aria-hidden="true">
                         <span class="miner-helmet"></span>
                         <span class="miner-face"></span>
                         <span class="miner-body"></span>
+                        <span class="miner-arm miner-arm-left"></span>
+                        <span class="miner-arm miner-arm-right"></span>
+                        <span class="miner-leg miner-leg-left"></span>
+                        <span class="miner-leg miner-leg-right"></span>
+                        <span class="miner-tool"></span>
                     </span>
                 `);
                 playerElement = tile.querySelector('.miner-avatar');
@@ -421,6 +426,7 @@ function movePlayer(directionName) {
     }
 
     facing = directionName;
+    playerElement.className = `miner-avatar miner-facing-${facing}`;
     const direction = DIRECTIONS[directionName];
     const nextRow = player.row + direction.row;
     const nextColumn = player.column + direction.column;

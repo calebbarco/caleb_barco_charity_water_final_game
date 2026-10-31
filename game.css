@@ -252,66 +252,172 @@
     position: relative;
     z-index: 2;
     display: flex;
-    width: 88%;
-    height: 96%;
+    width: 84%;
+    height: 92%;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    filter: drop-shadow(1px 2px 1px rgb(26 26 26 / 25%));
+    transform-origin: center;
+    filter: drop-shadow(1px 2px 1px rgb(26 26 26 / 30%));
+    transition: transform 140ms ease-out;
+}
+
+.miner-facing-up {
+    transform: rotate(0);
+}
+
+.miner-facing-right {
+    transform: rotate(90deg);
+}
+
+.miner-facing-down {
+    transform: rotate(180deg);
+}
+
+.miner-facing-left {
+    transform: rotate(-90deg);
 }
 
 .miner-helmet {
     position: relative;
     z-index: 1;
-    width: 65%;
-    height: 32%;
-    border: 2px solid var(--cw-charcoal);
-    border-radius: 50% 50% 18% 18%;
-    background: var(--cw-yellow);
+    width: 76%;
+    height: 30%;
+    border: 2px solid #1a1a1a;
+    border-radius: 48% 48% 18% 18%;
+    background: linear-gradient(160deg, #ffe46b, var(--cw-yellow) 65%);
+    box-shadow: 0 3px 0 var(--cw-rust), inset 0 2px 0 rgb(255 255 255 / 55%);
 }
 
 .miner-helmet::after {
     position: absolute;
-    top: 24%;
-    left: 43%;
-    width: 16%;
-    height: 25%;
-    transform: rotate(45deg);
-    border-radius: 60% 40% 60% 40%;
+    top: 36%;
+    left: 42%;
+    width: 17%;
+    height: 35%;
+    border: 1px solid var(--cw-charcoal);
+    border-radius: 50%;
     background: var(--cw-navy);
+    box-shadow: 0 0 4px rgb(255 255 255 / 75%);
     content: "";
 }
 
 .miner-face {
+    position: relative;
     z-index: 1;
-    width: 45%;
+    width: 48%;
     height: 25%;
-    margin-top: -3%;
-    border: 1px solid var(--cw-rust);
-    border-radius: 35% 35% 48% 48%;
-    background: #fbd8c1;
+    margin-top: 1%;
+    border: 1px solid #8a4b32;
+    border-radius: 32% 32% 44% 44%;
+    background: linear-gradient(#fbd8c1, #e8ad83);
+}
+
+.miner-face::before {
+    position: absolute;
+    top: 37%;
+    left: 26%;
+    width: 10%;
+    height: 12%;
+    border-radius: 50%;
+    background: var(--cw-charcoal);
+    box-shadow: 14px 0 var(--cw-charcoal);
+    content: "";
+}
+
+.miner-face::after {
+    position: absolute;
+    bottom: 20%;
+    left: 42%;
+    width: 18%;
+    height: 10%;
+    border-bottom: 1px solid #8a4b32;
+    border-radius: 50%;
+    content: "";
 }
 
 .miner-body {
-    width: 64%;
-    height: 38%;
-    margin-top: -1%;
-    border: 2px solid var(--cw-rust);
-    border-radius: 28% 28% 16% 16%;
-    background: linear-gradient(90deg, var(--cw-rust) 0 22%, var(--cw-yellow) 22% 78%, var(--cw-rust) 78%);
+    position: relative;
+    z-index: 1;
+    width: 56%;
+    height: 31%;
+    margin-top: 2%;
+    border: 2px solid var(--cw-charcoal);
+    border-radius: 20% 20% 12% 12%;
+    background:
+        linear-gradient(90deg, transparent 0 23%, var(--cw-yellow) 24% 31%, transparent 32% 68%, var(--cw-yellow) 69% 76%, transparent 77%),
+        linear-gradient(var(--cw-rust) 0 27%, var(--cw-navy) 28% 100%);
 }
 
-.miner-avatar::after {
+.miner-arm {
     position: absolute;
-    right: 5%;
-    bottom: 14%;
-    width: 9%;
-    height: 43%;
-    transform: rotate(-32deg);
+    z-index: 0;
+    top: 53%;
+    width: 18%;
+    height: 23%;
     border: 2px solid var(--cw-charcoal);
+    border-radius: 40%;
+    background: linear-gradient(var(--cw-yellow), #e5a914);
+}
+
+.miner-arm-left {
+    left: 8%;
+    transform: rotate(14deg);
+}
+
+.miner-arm-right {
+    right: 8%;
+    transform: rotate(-14deg);
+}
+
+.miner-leg {
+    position: absolute;
+    bottom: 2%;
+    width: 22%;
+    height: 20%;
+    border: 2px solid var(--cw-charcoal);
+    border-radius: 20% 20% 35% 35%;
+    background: linear-gradient(var(--cw-navy) 0 70%, var(--cw-rust) 71%);
+}
+
+.miner-leg-left {
+    left: 27%;
+}
+
+.miner-leg-right {
+    right: 27%;
+}
+
+.miner-tool {
+    position: absolute;
+    z-index: 2;
+    right: 7%;
+    bottom: 18%;
+    width: 5%;
+    height: 48%;
+    transform: rotate(-32deg);
+    border: 1px solid var(--cw-charcoal);
     border-radius: 3px;
-    background: var(--cw-rust);
+    background: linear-gradient(90deg, var(--cw-rust), #e1a071, var(--cw-rust));
+}
+
+.miner-tool::after {
+    position: absolute;
+    top: -3%;
+    left: -150%;
+    width: 390%;
+    height: 13%;
+    transform: rotate(8deg);
+    border: 1px solid var(--cw-charcoal);
+    border-radius: 3px;
+    background: #c5c9cc;
     content: "";
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .miner-avatar {
+        transition: none;
+    }
 }
 
 .ghost {
