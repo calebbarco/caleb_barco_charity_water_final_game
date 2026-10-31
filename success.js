@@ -4,6 +4,14 @@ const difficultyLabels = {
     normal: 'Normal',
     hard: 'Hard'
 };
+const selectedDifficulty = difficultyLabels[resultParameters.get('difficulty')]
+    ? resultParameters.get('difficulty')
+    : 'normal';
+const requestedLevel = Number(resultParameters.get('level'));
+const completedLevel = Number.isSafeInteger(requestedLevel) && requestedLevel >= 1
+    && requestedLevel < Number.MAX_SAFE_INTEGER
+    ? requestedLevel
+    : 1;
 
 function getResultValue(name) {
     const value = Number(resultParameters.get(name));
@@ -16,7 +24,10 @@ function getResultValue(name) {
 }
 
 document.querySelector('#difficulty-result').textContent =
-    difficultyLabels[resultParameters.get('difficulty')] || 'Normal';
+    difficultyLabels[selectedDifficulty];
+document.querySelector('#level-result').textContent = completedLevel;
+document.querySelector('#next-level-button').href =
+    `game.html?difficulty=${selectedDifficulty}&level=${completedLevel + 1}`;
 document.querySelector('#depth-result').textContent = getResultValue('depth');
 document.querySelector('#gallons-result').textContent = getResultValue('gallons').toLocaleString();
 document.querySelector('#people-result').textContent = getResultValue('people');

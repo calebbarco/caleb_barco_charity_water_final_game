@@ -43,6 +43,8 @@ function showAttempts() {
     attempts.forEach((attempt, index) => {
         const row = document.createElement('tr');
         addCell(row, `#${index + 1}`);
+        const level = Number.isSafeInteger(attempt.level) && attempt.level >= 1 ? attempt.level : 1;
+        addCell(row, level.toLocaleString());
         addCell(row, difficultyLabels[attempt.difficulty] || 'Normal');
 
         const resultCell = addCell(row, '');

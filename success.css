@@ -139,9 +139,14 @@
 
 .next-level-button {
     gap: 14px;
-    background: var(--cw-gray);
+    background: var(--cw-navy);
+    color: #fff;
+    cursor: pointer;
+}
+
+.next-level-button:hover {
+    background: var(--cw-light-blue);
     color: var(--cw-charcoal);
-    cursor: not-allowed;
 }
 
 .success-page :is(a, button):focus-visible {

@@ -38,7 +38,24 @@ const DIFFICULTIES = {
 };
 const requestedDifficulty = new URLSearchParams(window.location.search).get('difficulty');
 const difficultyKey = Object.hasOwn(DIFFICULTIES, requestedDifficulty) ? requestedDifficulty : 'normal';
-const difficulty = DIFFICULTIES[difficultyKey];
+const requestedLevel = Number(new URLSearchParams(window.location.search).get('level'));
+const level = Number.isSafeInteger(requestedLevel) && requestedLevel >= 1
+    ? requestedLevel
+    : 1;
+const levelMultiplier = Math.exp(Math.min(
+    (level - 1) * Math.log(1.15),
+    Math.log(Number.MAX_VALUE)
+));
+const baseDifficulty = DIFFICULTIES[difficultyKey];
+const difficulty = {
+    ...baseDifficulty,
+    durationSeconds: Math.max(15, Math.round(baseDifficulty.durationSeconds / levelMultiplier)),
+    startingLives: Math.max(1, baseDifficulty.startingLives - Math.floor((level - 1) / 3)),
+    ghostStepDelay: Math.max(180, Math.round(baseDifficulty.ghostStepDelay / levelMultiplier)),
+    rockChance: Math.min(0.35, baseDifficulty.rockChance * levelMultiplier),
+    cleanWaterMultiplier: baseDifficulty.cleanWaterMultiplier / levelMultiplier,
+    dirtyWaterChance: Math.min(0.25, baseDifficulty.dirtyWaterChance * levelMultiplier)
+};
 const DIRECTIONS = {
     up: { row: -1, column: 0 },
     down: { row: 1, column: 0 },
@@ -217,7 +234,7 @@ function updateStats() {
     const minutes = Math.floor(secondsRemaining / 60);
     const seconds = String(secondsRemaining % 60).padStart(2, '0');
 
-    difficultyLabel.textContent = difficulty.label;
+    difficultyLabel.textContent = `Level ${level} · ${difficulty.label}`;
     scoreValue.textContent = score;
     gallonsValue.textContent = `${gallons.toLocaleString()} gal`;
     livesValue.textContent = livesDisplay;
@@ -619,6 +636,7 @@ function finishGame(completed, reason = '') {
         attempts.push({
             playedAt: new Date().toISOString(),
             difficulty: difficultyKey,
+            level,
             completed,
             depth: depthInFeet,
             people: peopleHelped,
@@ -637,7 +655,7 @@ function finishGame(completed, reason = '') {
         const depthInFeet = deepestRow * FEET_PER_TILE;
         const peopleHelped = Math.round(score * 10.21);
 
-        window.location.href = `success.html?depth=${depthInFeet}&people=${peopleHelped}&score=${score}&gallons=${gallons}&difficulty=${difficultyKey}`;
+        window.location.href = `success.html?depth=${depthInFeet}&people=${peopleHelped}&score=${score}&gallons=${gallons}&difficulty=${difficultyKey}&level=${level}`;
         return;
     }
 
@@ -684,7 +702,7 @@ function resetGame() {
     donationNotice.hidden = true;
     gameAlert.hidden = true;
     movingWaterCan.hidden = false;
-    message.textContent = `${difficulty.label} mode: ${Math.floor(difficulty.durationSeconds / 60)}:${String(difficulty.durationSeconds % 60).padStart(2, '0')} per life and ${difficulty.startingLives} lives. Dig for clean water and return to the surface!`;
+    message.textContent = `Level ${level} · ${difficulty.label}: ${Math.floor(difficulty.durationSeconds / 60)}:${String(difficulty.durationSeconds % 60).padStart(2, '0')} per life and ${difficulty.startingLives} lives. Dig for clean water and return to the surface!`;
     drawBoard();
     createWaterCanPath();
 
@@ -734,7 +752,7 @@ document.querySelectorAll('[data-reset-game]').forEach((button) => {
 });
 
 createBoard();
-message.textContent = `${difficulty.label} mode: ${Math.floor(difficulty.durationSeconds / 60)}:${String(difficulty.durationSeconds % 60).padStart(2, '0')} per life and ${difficulty.startingLives} lives. Dig for clean water and return to the surface!`;
+message.textContent = `Level ${level} · ${difficulty.label}: ${Math.floor(difficulty.durationSeconds / 60)}:${String(difficulty.durationSeconds % 60).padStart(2, '0')} per life and ${difficulty.startingLives} lives. Dig for clean water and return to the surface!`;
 drawBoard();
 createWaterCanPath();
 ghostTimer = window.setInterval(moveGhosts, difficulty.ghostStepDelay);
