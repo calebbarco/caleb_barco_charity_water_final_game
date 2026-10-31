@@ -251,15 +251,20 @@
 .miner-avatar {
     position: relative;
     z-index: 2;
-    display: flex;
     width: 84%;
     height: 92%;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     transform-origin: center;
     filter: drop-shadow(1px 2px 1px rgb(26 26 26 / 30%));
     transition: transform 140ms ease-out;
+}
+
+.miner-sprite {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
 .miner-facing-up {
@@ -414,9 +419,82 @@
     content: "";
 }
 
+.miner-running .miner-sprite {
+    animation: miner-run-bob 150ms ease-in-out infinite alternate;
+}
+
+.miner-running .miner-arm-left,
+.miner-running .miner-leg-right {
+    animation: miner-run-back 150ms ease-in-out infinite alternate;
+}
+
+.miner-running .miner-arm-right,
+.miner-running .miner-leg-left {
+    animation: miner-run-forward 150ms ease-in-out infinite alternate;
+}
+
+.miner-digging .miner-sprite {
+    animation: miner-dig-bob 240ms ease-in-out 2 alternate;
+}
+
+.miner-digging .miner-arm-right {
+    transform-origin: 50% 10%;
+    animation: miner-dig-swing 240ms ease-in-out 2 alternate;
+}
+
+.miner-digging .miner-tool {
+    transform-origin: 50% 90%;
+    animation: miner-tool-swing 240ms ease-in-out 2 alternate;
+}
+
+@keyframes miner-run-bob {
+    to {
+        translate: 0 -7%;
+    }
+}
+
+@keyframes miner-run-back {
+    to {
+        transform: rotate(28deg);
+    }
+}
+
+@keyframes miner-run-forward {
+    to {
+        transform: rotate(-28deg);
+    }
+}
+
+@keyframes miner-dig-bob {
+    to {
+        translate: 0 4%;
+    }
+}
+
+@keyframes miner-dig-swing {
+    to {
+        transform: rotate(-35deg);
+    }
+}
+
+@keyframes miner-tool-swing {
+    to {
+        transform: rotate(-70deg);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .miner-avatar {
+    .miner-avatar,
+    .miner-running .miner-sprite,
+    .miner-running .miner-arm-left,
+    .miner-running .miner-arm-right,
+    .miner-running .miner-leg-left,
+    .miner-running .miner-leg-right,
+    .miner-digging .miner-sprite,
+    .miner-digging .miner-arm-right,
+    .miner-digging .miner-tool {
         transition: none;
+        animation: none;
     }
 }
 

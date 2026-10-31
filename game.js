@@ -85,6 +85,7 @@ const tileElements = [];
 let player = { row: 0, column: 0 };
 let playerElement = null;
 let facing = 'down';
+let playerAnimation = '';
 let ghosts = createStartingGhosts();
 let score = 0;
 let gallons = 0;
@@ -109,6 +110,7 @@ let waterCanRespawnTimeout;
 let donationNoticeTimeout;
 let gameAlertTimeout;
 let invulnerabilityTimeout;
+let playerAnimationTimeout;
 let ghostTimer;
 let gameTimer;
 
@@ -191,15 +193,17 @@ function drawBoard() {
 
             if (player.row === worldRow && player.column === worldColumn) {
                 tile.insertAdjacentHTML('beforeend', `
-                    <span class="miner-avatar miner-facing-${facing}" aria-hidden="true">
-                        <span class="miner-helmet"></span>
-                        <span class="miner-face"></span>
-                        <span class="miner-body"></span>
-                        <span class="miner-arm miner-arm-left"></span>
-                        <span class="miner-arm miner-arm-right"></span>
-                        <span class="miner-leg miner-leg-left"></span>
-                        <span class="miner-leg miner-leg-right"></span>
-                        <span class="miner-tool"></span>
+                    <span class="miner-avatar miner-facing-${facing} ${playerAnimation ? `miner-${playerAnimation}` : ''}" aria-hidden="true">
+                        <span class="miner-sprite">
+                            <span class="miner-helmet"></span>
+                            <span class="miner-face"></span>
+                            <span class="miner-body"></span>
+                            <span class="miner-arm miner-arm-left"></span>
+                            <span class="miner-arm miner-arm-right"></span>
+                            <span class="miner-leg miner-leg-left"></span>
+                            <span class="miner-leg miner-leg-right"></span>
+                            <span class="miner-tool"></span>
+                        </span>
                     </span>
                 `);
                 playerElement = tile.querySelector('.miner-avatar');
@@ -248,6 +252,18 @@ function updateStats() {
     depthValue.textContent = `${deepestRow * FEET_PER_TILE} ft`;
     timeValue.textContent = `${minutes}:${seconds}`;
     timeValue.classList.toggle('time-running-low', secondsRemaining <= 10);
+}
+
+function animatePlayer(animation, duration) {
+    window.clearTimeout(playerAnimationTimeout);
+    playerAnimation = animation;
+    playerElement.classList.add(`miner-${animation}`);
+    playerAnimationTimeout = window.setTimeout(() => {
+        playerAnimation = '';
+        if (playerElement) {
+            playerElement.classList.remove(`miner-${animation}`);
+        }
+    }, duration);
 }
 
 function getRandomWaterCanPoint() {
@@ -462,6 +478,7 @@ function movePlayer(directionName) {
         ? 'Dig down to collect water, then return to this surface!'
         : 'Keep exploring for clean water, and watch out for ghosts!';
     drawBoard();
+    animatePlayer('running', 300);
 }
 
 function dig() {
@@ -469,6 +486,7 @@ function dig() {
         return;
     }
 
+    animatePlayer('digging', 480);
     playerHasStarted = true;
     const direction = DIRECTIONS[facing];
     const targetRow = player.row + direction.row;
@@ -679,11 +697,13 @@ function resetGame() {
     window.clearTimeout(donationNoticeTimeout);
     window.clearTimeout(gameAlertTimeout);
     window.clearTimeout(invulnerabilityTimeout);
+    window.clearTimeout(playerAnimationTimeout);
 
     worldTiles.clear();
     player = { row: 0, column: 0 };
     playerElement = null;
     facing = 'down';
+    playerAnimation = '';
     ghosts = createStartingGhosts();
     score = 0;
     gallons = 0;
