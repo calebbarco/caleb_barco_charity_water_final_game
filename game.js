@@ -631,7 +631,7 @@ function finishGame(completed, reason = '') {
         const savedAttempts = JSON.parse(localStorage.getItem(LEADERBOARD_STORAGE_KEY) || '[]');
         const attempts = Array.isArray(savedAttempts) ? savedAttempts : [];
         const depthInFeet = deepestRow * FEET_PER_TILE;
-        const peopleHelped = Math.round(score * 10.21);
+        const peopleHelped = Math.floor(gallons / 100);
 
         attempts.push({
             playedAt: new Date().toISOString(),
@@ -653,7 +653,7 @@ function finishGame(completed, reason = '') {
 
     if (completed) {
         const depthInFeet = deepestRow * FEET_PER_TILE;
-        const peopleHelped = Math.round(score * 10.21);
+        const peopleHelped = Math.floor(gallons / 100);
 
         window.location.href = `success.html?depth=${depthInFeet}&people=${peopleHelped}&score=${score}&gallons=${gallons}&difficulty=${difficultyKey}&level=${level}`;
         return;

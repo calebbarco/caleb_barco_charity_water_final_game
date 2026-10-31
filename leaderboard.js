@@ -56,7 +56,7 @@ function showAttempts() {
         addCell(row, formatDate(attempt.playedAt));
         addCell(row, `${attempt.depth.toLocaleString()} ft`);
         addCell(row, `${attempt.gallons.toLocaleString()} gal`);
-        addCell(row, attempt.people.toLocaleString());
+        addCell(row, Math.floor(attempt.gallons / 100).toLocaleString());
         addCell(row, attempt.score.toLocaleString());
         leaderboardBody.append(row);
     });
