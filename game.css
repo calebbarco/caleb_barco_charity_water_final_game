@@ -672,6 +672,7 @@
 
 .dig-button,
 .reset-button,
+.sound-toggle,
 .home-control-button,
 .overlay-button {
     display: flex;
@@ -698,6 +699,15 @@
     background: #fff;
 }
 
+.sound-toggle {
+    width: 100%;
+    min-height: 36px;
+    border: 2px solid var(--cw-navy);
+    background: var(--cw-cream);
+    color: var(--cw-navy);
+    font-size: 0.9rem;
+}
+
 .home-control-button {
     min-height: 36px;
     border: 2px solid var(--cw-navy);
@@ -708,6 +718,7 @@
 
 .dig-button:hover,
 .reset-button:hover,
+.sound-toggle:hover,
 .home-control-button:hover,
 .overlay-button:hover {
     background: var(--cw-navy);

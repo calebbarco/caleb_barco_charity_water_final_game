@@ -5,8 +5,44 @@ const WATER_CAN_SPEED = 180;
 const WATER_CAN_RESPAWN_DELAY = 10000;
 const DONATION_POINTS = 1000;
 const FEET_PER_TILE = 25;
+const LEVEL_COMPLETE_SOUND_DURATION = 700;
 const LEADERBOARD_STORAGE_KEY = 'waterDigAttempts';
 const MAX_SAVED_ATTEMPTS = 20;
+const ARCADE_NOTES = {
+    step: [[520, 360, 0.06, 'square', 0.025]],
+    bump: [[150, 90, 0.12, 'square', 0.04]],
+    dig: [[180, 75, 0.13, 'sawtooth', 0.045]],
+    water: [
+        [440, 660, 0.12, 'triangle', 0.05],
+        [660, 990, 0.16, 'triangle', 0.05, 0.1],
+        [880, 1320, 0.2, 'triangle', 0.045, 0.2]
+    ],
+    dirty: [[170, 55, 0.24, 'sawtooth', 0.045]],
+    ghost: [
+        [280, 620, 0.1, 'square', 0.04],
+        [620, 280, 0.18, 'square', 0.04, 0.1]
+    ],
+    hit: [
+        [320, 100, 0.18, 'sawtooth', 0.05],
+        [180, 60, 0.22, 'square', 0.04, 0.14]
+    ],
+    donation: [
+        [660, 880, 0.12, 'square', 0.05],
+        [880, 1320, 0.2, 'square', 0.05, 0.1]
+    ],
+    gameOver: [
+        [440, 330, 0.16, 'square', 0.04],
+        [330, 220, 0.2, 'square', 0.04, 0.16],
+        [220, 110, 0.3, 'square', 0.04, 0.36]
+    ],
+    complete: [
+        [523, 523, 0.12, 'square', 0.04],
+        [659, 659, 0.12, 'square', 0.04, 0.12],
+        [784, 784, 0.12, 'square', 0.04, 0.24],
+        [1047, 1047, 0.25, 'square', 0.04, 0.36]
+    ],
+    powerOn: [[660, 990, 0.1, 'square', 0.035]]
+};
 const DIFFICULTIES = {
     easy: {
         label: 'Easy',
@@ -79,8 +115,12 @@ const movingWaterCan = document.querySelector('#moving-water-can');
 const donationNotice = document.querySelector('#donation-notice');
 const gameAlert = document.querySelector('#game-alert');
 const difficultyLabel = document.querySelector('#difficulty-label');
+const soundToggle = document.querySelector('#sound-toggle');
 
 const worldTiles = new Map();
+let audioContext = null;
+let soundEnabled = true;
+let audioWarningShown = false;
 const tileElements = [];
 let player = { row: 0, column: 0 };
 let playerElement = null;
@@ -111,8 +151,72 @@ let donationNoticeTimeout;
 let gameAlertTimeout;
 let invulnerabilityTimeout;
 let playerAnimationTimeout;
+let levelCompleteTimeout;
 let ghostTimer;
 let gameTimer;
+
+function playTone(context, note) {
+    const [startFrequency, endFrequency, duration, waveform, volume, delay = 0] = note;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const startTime = context.currentTime + delay;
+
+    oscillator.type = waveform;
+    oscillator.frequency.setValueAtTime(startFrequency, startTime);
+    oscillator.frequency.exponentialRampToValueAtTime(endFrequency, startTime + duration);
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + 0.02);
+}
+
+function playArcadeSound(name) {
+    if (!soundEnabled) {
+        return false;
+    }
+
+    const AudioContextConstructor = window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextConstructor) {
+        if (!audioWarningShown) {
+            console.warn('Arcade sound is unavailable because this browser does not support Web Audio.');
+            audioWarningShown = true;
+        }
+        return false;
+    }
+
+    if (!audioContext) {
+        audioContext = new AudioContextConstructor();
+    }
+
+    if (audioContext.state === 'suspended') {
+        audioContext.resume().catch((error) => {
+            console.warn('Arcade sound could not be started.', error);
+        });
+    }
+
+    const notes = ARCADE_NOTES[name];
+
+    if (notes) {
+        notes.forEach((note) => playTone(audioContext, note));
+        return true;
+    }
+
+    return false;
+}
+
+soundToggle.addEventListener('click', () => {
+    soundEnabled = !soundEnabled;
+    soundToggle.textContent = soundEnabled ? 'Sound: On' : 'Sound: Off';
+    soundToggle.setAttribute('aria-pressed', String(soundEnabled));
+
+    if (soundEnabled) {
+        playArcadeSound('powerOn');
+    }
+});
 
 function createStartingGhosts() {
     return [
@@ -417,6 +521,7 @@ function moveWaterCan(frameTime) {
             score += DONATION_POINTS;
             updateStats();
             showDonationNotice();
+            playArcadeSound('donation');
             hideWaterCanUntilRespawn();
             return;
         }
@@ -449,6 +554,7 @@ function movePlayer(directionName) {
 
     if (nextRow < 0) {
         message.textContent = 'You are at the surface. Dig down to explore!';
+        playArcadeSound('bump');
         return;
     }
 
@@ -459,6 +565,7 @@ function movePlayer(directionName) {
         message.textContent = nextTile.type === 'rock'
             ? 'A rock blocks the way. Try another route!'
             : 'That tile is in the way. Face it and press Dig.';
+        playArcadeSound('bump');
         return;
     }
 
@@ -479,6 +586,7 @@ function movePlayer(directionName) {
         : 'Keep exploring for clean water, and watch out for ghosts!';
     drawBoard();
     animatePlayer('running', 300);
+    playArcadeSound('step');
 }
 
 function dig() {
@@ -507,6 +615,7 @@ function dig() {
         score += 20;
         doublePointsUntil = Date.now() + DOUBLE_POINTS_DURATION;
         message.textContent = 'Ghost defeated! Double points are active for 10 seconds!';
+        playArcadeSound('ghost');
 
         if (ghosts.length === 0) {
             spawnNextGhost();
@@ -518,6 +627,7 @@ function dig() {
 
     if (targetTile.type === 'rock') {
         message.textContent = 'Rocks cannot be dug through. Try another route!';
+        playArcadeSound('bump');
         return;
     }
 
@@ -528,18 +638,21 @@ function dig() {
         score += isDoublePointsActive ? 20 : 10;
         targetTile.type = 'air';
         message.textContent = `Clean water found! +${targetTile.gallons} gallons.`;
+        playArcadeSound('water');
     } else if (targetTile.type === 'dirty-water') {
         const pointsLost = Math.min(score, 100);
         score -= pointsLost;
         targetTile.type = 'air';
         message.textContent = `Dirty water pocket! You lost ${pointsLost} points.`;
         showGameAlert(`Dirty water! Your score went down by ${pointsLost} points.`);
+        playArcadeSound('dirty');
     } else {
         targetTile.type = 'air';
         score += isDoublePointsActive ? 20 : 10;
         message.textContent = isDoublePointsActive
             ? 'Double points! Move into the cleared space.'
             : 'Nice digging! Move into the cleared space.';
+        playArcadeSound('dig');
     }
 
     drawBoard();
@@ -618,6 +731,7 @@ function loseLife(reason = 'A ghost caught you! You lost a life.', restartTimer 
         return;
     }
 
+    playArcadeSound('hit');
     player = { row: 0, column: 0 };
     hasBeenUnderground = false;
     ghosts = createStartingGhosts();
@@ -643,6 +757,10 @@ function finishGame(completed, reason = '') {
     }
 
     gameIsOver = true;
+    const hasCompletionSound = completed && playArcadeSound('complete');
+    if (!completed) {
+        playArcadeSound('gameOver');
+    }
     window.clearInterval(ghostTimer);
     window.clearInterval(gameTimer);
     window.cancelAnimationFrame(waterCanAnimationFrame);
@@ -678,8 +796,15 @@ function finishGame(completed, reason = '') {
     if (completed) {
         const depthInFeet = deepestRow * FEET_PER_TILE;
         const peopleHelped = Math.floor(gallons / 100);
+        const successUrl = `success.html?depth=${depthInFeet}&people=${peopleHelped}&score=${score}&gallons=${gallons}&difficulty=${difficultyKey}&level=${level}`;
 
-        window.location.href = `success.html?depth=${depthInFeet}&people=${peopleHelped}&score=${score}&gallons=${gallons}&difficulty=${difficultyKey}&level=${level}`;
+        if (hasCompletionSound) {
+            levelCompleteTimeout = window.setTimeout(() => {
+                window.location.href = successUrl;
+            }, LEVEL_COMPLETE_SOUND_DURATION);
+        } else {
+            window.location.href = successUrl;
+        }
         return;
     }
 
@@ -698,6 +823,7 @@ function resetGame() {
     window.clearTimeout(gameAlertTimeout);
     window.clearTimeout(invulnerabilityTimeout);
     window.clearTimeout(playerAnimationTimeout);
+    window.clearTimeout(levelCompleteTimeout);
 
     worldTiles.clear();
     player = { row: 0, column: 0 };
@@ -752,6 +878,11 @@ function countDown() {
 }
 
 document.addEventListener('keydown', (event) => {
+    if (event.target instanceof Element
+        && event.target.closest('button, a, input, select, textarea')) {
+        return;
+    }
+
     const directionName = {
         ArrowUp: 'up',
         ArrowDown: 'down',
