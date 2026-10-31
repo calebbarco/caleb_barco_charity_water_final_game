@@ -10,4 +10,4 @@ Choose Easy, Normal, or Hard on the homepage before starting a round. Easy gives
 
 The results estimate one person helped for every 100 gallons collected, so a run with no water collected helps zero people. The leaderboard keeps the 20 most recent finished runs, their difficulty, and their level in this browser only; scores are not sent to a server.
 
-The game also plays synthesized, retro arcade-style sound effects and looping music during gameplay. Use the Sound button in the controls to turn audio off or back on.
+The game also plays synthesized, retro arcade-style sound effects and looping music during gameplay. Use the Sound button in the controls to turn audio off or back on. Score milestones at 100, 500, 1,000, 2,500, and 5,000 points display an encouraging message.

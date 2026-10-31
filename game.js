@@ -11,6 +11,13 @@ const MUSIC_SCHEDULE_INTERVAL = 25;
 const MUSIC_SCHEDULE_AHEAD = 0.1;
 const LEADERBOARD_STORAGE_KEY = 'waterDigAttempts';
 const MAX_SAVED_ATTEMPTS = 20;
+const SCORE_MILESTONES = [
+    { score: 100, message: '100 points! Nice digging, keep it up!' },
+    { score: 500, message: '500 points! You are on a roll!' },
+    { score: 1000, message: '1,000 points! Arcade champion!' },
+    { score: 2500, message: '2,500 points! Incredible work!' },
+    { score: 5000, message: '5,000 points! You are a water-digging legend!' }
+];
 const ARCADE_MUSIC = [
     { melody: 523, bass: 131 },
     { melody: null },
@@ -157,6 +164,7 @@ let score = 0;
 let gallons = 0;
 let lives = difficulty.startingLives;
 let gameIsOver = false;
+let nextScoreMilestone = 0;
 let isInvulnerable = false;
 let playerHasStarted = false;
 let hasBeenUnderground = false;
@@ -450,6 +458,14 @@ function updateStats() {
     timeValue.classList.toggle('time-running-low', secondsRemaining <= 10);
 }
 
+function checkScoreMilestones() {
+    while (nextScoreMilestone < SCORE_MILESTONES.length
+        && score >= SCORE_MILESTONES[nextScoreMilestone].score) {
+        message.textContent = SCORE_MILESTONES[nextScoreMilestone].message;
+        nextScoreMilestone += 1;
+    }
+}
+
 function animatePlayer(animation, duration) {
     window.clearTimeout(playerAnimationTimeout);
     playerAnimation = animation;
@@ -614,6 +630,7 @@ function moveWaterCan(frameTime) {
             updateStats();
             showDonationNotice();
             playArcadeSound('donation');
+            checkScoreMilestones();
             hideWaterCanUntilRespawn();
             return;
         }
@@ -713,6 +730,7 @@ function dig() {
             spawnNextGhost();
         }
 
+        checkScoreMilestones();
         drawBoard();
         return;
     }
@@ -747,6 +765,7 @@ function dig() {
         playArcadeSound('dig');
     }
 
+    checkScoreMilestones();
     drawBoard();
 }
 
@@ -929,6 +948,7 @@ function resetGame() {
     gallons = 0;
     lives = difficulty.startingLives;
     gameIsOver = false;
+    nextScoreMilestone = 0;
     isInvulnerable = false;
     playerHasStarted = false;
     hasBeenUnderground = false;
