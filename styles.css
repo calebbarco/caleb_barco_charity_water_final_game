@@ -109,14 +109,14 @@ body {
 
 .leaderboard-button {
     padding: 0 18px;
-    background: var(--cw-gray);
-    color: var(--cw-charcoal);
+    background: var(--cw-navy);
+    color: #fff;
     cursor: pointer;
 }
 
 .leaderboard-button:hover {
-    background: var(--cw-navy);
-    color: #fff;
+    background: var(--cw-light-blue);
+    color: var(--cw-charcoal);
 }
 
 .coming-soon {
