@@ -20,9 +20,18 @@
         </div>
 
         <nav class="menu" aria-label="Main menu">
-            <a class="menu-button start-button" href="game.html">
-                Start digging <span class="arrow" aria-hidden="true">&rarr;</span>
-            </a>
+            <form class="start-game-form" action="game.html" method="get">
+                <label for="difficulty-select">Choose difficulty</label>
+                <select id="difficulty-select" name="difficulty">
+                    <option value="easy">Easy</option>
+                    <option value="normal" selected>Normal</option>
+                    <option value="hard">Hard</option>
+                </select>
+                <p class="difficulty-hint">Easy gives you more time and lives. Hard brings faster ghosts and more hazards.</p>
+                <button class="menu-button start-button" type="submit">
+                    Start digging <span class="arrow" aria-hidden="true">&rarr;</span>
+                </button>
+            </form>
             <a class="menu-button leaderboard-button" href="leaderboard.html">Leaderboard</a>
             <div class="secondary-actions">
                 <a class="menu-button secondary-button" href="https://www.charitywater.org/our-work?_gl=1*4pugwn*_up*MQ..*_gs*MQ..&amp;gclid=CjwKCAjw0LzWBhBOEiwAKQd0cIA-X7klRmWoJybeHogKnyyJiwslypo9ryMCMNLgmh31uJA9SZYtSxoCBrEQAvD_BwE&amp;gbraid=0AAAAADNj5D9Z6fBlp6_cvAuyee0oKlpTj" target="_blank" rel="noopener noreferrer">Why we dig</a>

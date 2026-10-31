@@ -1,4 +1,9 @@
 const resultParameters = new URLSearchParams(window.location.search);
+const difficultyLabels = {
+    easy: 'Easy',
+    normal: 'Normal',
+    hard: 'Hard'
+};
 
 function getResultValue(name) {
     const value = Number(resultParameters.get(name));
@@ -10,6 +15,8 @@ function getResultValue(name) {
     return value;
 }
 
+document.querySelector('#difficulty-result').textContent =
+    difficultyLabels[resultParameters.get('difficulty')] || 'Normal';
 document.querySelector('#depth-result').textContent = getResultValue('depth');
 document.querySelector('#gallons-result').textContent = getResultValue('gallons').toLocaleString();
 document.querySelector('#people-result').textContent = getResultValue('people');

@@ -2,6 +2,11 @@ const LEADERBOARD_STORAGE_KEY = 'waterDigAttempts';
 const leaderboardBody = document.querySelector('#leaderboard-body');
 const tableWrap = document.querySelector('#leaderboard-table-wrap');
 const emptyState = document.querySelector('#empty-state');
+const difficultyLabels = {
+    easy: 'Easy',
+    normal: 'Normal',
+    hard: 'Hard'
+};
 
 function formatDate(value) {
     return new Intl.DateTimeFormat(undefined, {
@@ -38,6 +43,7 @@ function showAttempts() {
     attempts.forEach((attempt, index) => {
         const row = document.createElement('tr');
         addCell(row, `#${index + 1}`);
+        addCell(row, difficultyLabels[attempt.difficulty] || 'Normal');
 
         const resultCell = addCell(row, '');
         const resultLabel = document.createElement('span');

@@ -1,14 +1,44 @@
 const ROWS = 12;
 const COLUMNS = 18;
-const GHOST_STEP_DELAY = 650;
 const DOUBLE_POINTS_DURATION = 10000;
 const WATER_CAN_SPEED = 180;
 const WATER_CAN_RESPAWN_DELAY = 10000;
 const DONATION_POINTS = 1000;
-const GAME_DURATION_SECONDS = 60;
 const FEET_PER_TILE = 25;
 const LEADERBOARD_STORAGE_KEY = 'waterDigAttempts';
 const MAX_SAVED_ATTEMPTS = 20;
+const DIFFICULTIES = {
+    easy: {
+        label: 'Easy',
+        durationSeconds: 90,
+        startingLives: 4,
+        ghostStepDelay: 900,
+        rockChance: 0.05,
+        cleanWaterMultiplier: 1.25,
+        dirtyWaterChance: 0.025
+    },
+    normal: {
+        label: 'Normal',
+        durationSeconds: 60,
+        startingLives: 3,
+        ghostStepDelay: 650,
+        rockChance: 0.08,
+        cleanWaterMultiplier: 1,
+        dirtyWaterChance: 0.04
+    },
+    hard: {
+        label: 'Hard',
+        durationSeconds: 45,
+        startingLives: 2,
+        ghostStepDelay: 450,
+        rockChance: 0.12,
+        cleanWaterMultiplier: 0.75,
+        dirtyWaterChance: 0.07
+    }
+};
+const requestedDifficulty = new URLSearchParams(window.location.search).get('difficulty');
+const difficultyKey = Object.hasOwn(DIFFICULTIES, requestedDifficulty) ? requestedDifficulty : 'normal';
+const difficulty = DIFFICULTIES[difficultyKey];
 const DIRECTIONS = {
     up: { row: -1, column: 0 },
     down: { row: 1, column: 0 },
@@ -31,6 +61,7 @@ const gameStage = document.querySelector('.game-stage');
 const movingWaterCan = document.querySelector('#moving-water-can');
 const donationNotice = document.querySelector('#donation-notice');
 const gameAlert = document.querySelector('#game-alert');
+const difficultyLabel = document.querySelector('#difficulty-label');
 
 const worldTiles = new Map();
 const tileElements = [];
@@ -40,7 +71,7 @@ let facing = 'down';
 let ghosts = createStartingGhosts();
 let score = 0;
 let gallons = 0;
-let lives = 3;
+let lives = difficulty.startingLives;
 let gameIsOver = false;
 let isInvulnerable = false;
 let playerHasStarted = false;
@@ -48,7 +79,7 @@ let hasBeenUnderground = false;
 let deepestRow = 0;
 let nextGhostColor = 'yellow';
 let doublePointsUntil = 0;
-let secondsRemaining = GAME_DURATION_SECONDS;
+let secondsRemaining = difficulty.durationSeconds;
 let waterCanX = 0;
 let waterCanY = 0;
 let previousWaterCanFrame = null;
@@ -85,13 +116,13 @@ function getWorldTile(row, column) {
             tile = { type: 'air' };
         } else {
             const chance = Math.random();
-            const cleanWaterChance = Math.min(0.18, 0.04 + row * 0.001);
+            const cleanWaterChance = Math.min(0.18, (0.04 + row * 0.001) * difficulty.cleanWaterMultiplier);
 
-            if (chance < 0.08) {
+            if (chance < difficulty.rockChance) {
                 tile = { type: 'rock' };
-            } else if (chance < 0.08 + cleanWaterChance) {
+            } else if (chance < difficulty.rockChance + cleanWaterChance) {
                 tile = { type: 'clean-water', gallons: 100 + Math.floor(Math.random() * 401) };
-            } else if (chance < 0.12 + cleanWaterChance) {
+            } else if (chance < difficulty.rockChance + cleanWaterChance + difficulty.dirtyWaterChance) {
                 tile = { type: 'dirty-water' };
             } else {
                 tile = { type: 'soil' };
@@ -181,11 +212,12 @@ function getTileLabel(type) {
 }
 
 function updateStats() {
-    const livesDisplay = `${'♥ '.repeat(lives).trim()}${'♡ '.repeat(3 - lives).trim()}`.trim();
+    const livesDisplay = `${'♥ '.repeat(lives).trim()}${'♡ '.repeat(difficulty.startingLives - lives).trim()}`.trim();
     const boostSeconds = Math.max(0, Math.ceil((doublePointsUntil - Date.now()) / 1000));
     const minutes = Math.floor(secondsRemaining / 60);
     const seconds = String(secondsRemaining % 60).padStart(2, '0');
 
+    difficultyLabel.textContent = difficulty.label;
     scoreValue.textContent = score;
     gallonsValue.textContent = `${gallons.toLocaleString()} gal`;
     livesValue.textContent = livesDisplay;
@@ -549,11 +581,13 @@ function loseLife(reason = 'A ghost caught you! You lost a life.', restartTimer 
     hasBeenUnderground = false;
     ghosts = createStartingGhosts();
     if (restartTimer) {
-        secondsRemaining = GAME_DURATION_SECONDS;
+        secondsRemaining = difficulty.durationSeconds;
     }
     isInvulnerable = true;
+    const minutes = Math.floor(difficulty.durationSeconds / 60);
+    const seconds = String(difficulty.durationSeconds % 60).padStart(2, '0');
     const respawnMessage = restartTimer
-        ? 'You respawned at the surface with 1:00 to keep playing.'
+        ? `You respawned at the surface with ${minutes}:${seconds} to keep playing.`
         : 'You respawned at the surface.';
     message.textContent = `${reason} ${respawnMessage}`;
     drawBoard();
@@ -584,6 +618,7 @@ function finishGame(completed, reason = '') {
 
         attempts.push({
             playedAt: new Date().toISOString(),
+            difficulty: difficultyKey,
             completed,
             depth: depthInFeet,
             people: peopleHelped,
@@ -602,7 +637,7 @@ function finishGame(completed, reason = '') {
         const depthInFeet = deepestRow * FEET_PER_TILE;
         const peopleHelped = Math.round(score * 10.21);
 
-        window.location.href = `success.html?depth=${depthInFeet}&people=${peopleHelped}&score=${score}&gallons=${gallons}`;
+        window.location.href = `success.html?depth=${depthInFeet}&people=${peopleHelped}&score=${score}&gallons=${gallons}&difficulty=${difficultyKey}`;
         return;
     }
 
@@ -628,7 +663,7 @@ function resetGame() {
     ghosts = createStartingGhosts();
     score = 0;
     gallons = 0;
-    lives = 3;
+    lives = difficulty.startingLives;
     gameIsOver = false;
     isInvulnerable = false;
     playerHasStarted = false;
@@ -636,7 +671,7 @@ function resetGame() {
     deepestRow = 0;
     nextGhostColor = 'yellow';
     doublePointsUntil = 0;
-    secondsRemaining = GAME_DURATION_SECONDS;
+    secondsRemaining = difficulty.durationSeconds;
     waterCanX = 0;
     waterCanY = 0;
     previousWaterCanFrame = null;
@@ -649,11 +684,11 @@ function resetGame() {
     donationNotice.hidden = true;
     gameAlert.hidden = true;
     movingWaterCan.hidden = false;
-    message.textContent = 'You have one minute. Dig to collect clean water, then return to the surface!';
+    message.textContent = `${difficulty.label} mode: ${Math.floor(difficulty.durationSeconds / 60)}:${String(difficulty.durationSeconds % 60).padStart(2, '0')} per life and ${difficulty.startingLives} lives. Dig for clean water and return to the surface!`;
     drawBoard();
     createWaterCanPath();
 
-    ghostTimer = window.setInterval(moveGhosts, GHOST_STEP_DELAY);
+    ghostTimer = window.setInterval(moveGhosts, difficulty.ghostStepDelay);
     gameTimer = window.setInterval(countDown, 1000);
     waterCanAnimationFrame = window.requestAnimationFrame(moveWaterCan);
 }
@@ -699,8 +734,9 @@ document.querySelectorAll('[data-reset-game]').forEach((button) => {
 });
 
 createBoard();
+message.textContent = `${difficulty.label} mode: ${Math.floor(difficulty.durationSeconds / 60)}:${String(difficulty.durationSeconds % 60).padStart(2, '0')} per life and ${difficulty.startingLives} lives. Dig for clean water and return to the surface!`;
 drawBoard();
 createWaterCanPath();
-ghostTimer = window.setInterval(moveGhosts, GHOST_STEP_DELAY);
+ghostTimer = window.setInterval(moveGhosts, difficulty.ghostStepDelay);
 gameTimer = window.setInterval(countDown, 1000);
 waterCanAnimationFrame = window.requestAnimationFrame(moveWaterCan);

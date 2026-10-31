@@ -90,6 +90,37 @@ body {
     text-decoration: none;
 }
 
+.start-game-form {
+    display: grid;
+    gap: 8px;
+}
+
+.start-game-form label {
+    font-weight: 700;
+}
+
+.start-game-form select {
+    min-height: 46px;
+    padding: 0 12px;
+    border: 2px solid var(--cw-gray);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--cw-charcoal);
+    font: inherit;
+}
+
+.start-game-form select:focus-visible {
+    outline: 3px solid var(--cw-navy);
+    outline-offset: 3px;
+}
+
+.difficulty-hint {
+    margin: 0;
+    color: var(--cw-charcoal);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
 .start-button {
     justify-content: space-between;
     padding: 0 22px;
