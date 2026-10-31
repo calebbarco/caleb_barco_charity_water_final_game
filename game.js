@@ -6,8 +6,29 @@ const WATER_CAN_RESPAWN_DELAY = 10000;
 const DONATION_POINTS = 1000;
 const FEET_PER_TILE = 25;
 const LEVEL_COMPLETE_SOUND_DURATION = 700;
+const MUSIC_STEP_DURATION = 0.23;
+const MUSIC_SCHEDULE_INTERVAL = 25;
+const MUSIC_SCHEDULE_AHEAD = 0.1;
 const LEADERBOARD_STORAGE_KEY = 'waterDigAttempts';
 const MAX_SAVED_ATTEMPTS = 20;
+const ARCADE_MUSIC = [
+    { melody: 523, bass: 131 },
+    { melody: null },
+    { melody: 659 },
+    { melody: 784 },
+    { melody: 659, bass: 131 },
+    { melody: null },
+    { melody: 523 },
+    { melody: 392 },
+    { melody: 440, bass: 110 },
+    { melody: null },
+    { melody: 587 },
+    { melody: 659 },
+    { melody: 784, bass: 98 },
+    { melody: null },
+    { melody: 659 },
+    { melody: 523 }
+];
 const ARCADE_NOTES = {
     step: [[520, 360, 0.06, 'square', 0.025]],
     bump: [[150, 90, 0.12, 'square', 0.04]],
@@ -121,6 +142,11 @@ const worldTiles = new Map();
 let audioContext = null;
 let soundEnabled = true;
 let audioWarningShown = false;
+let musicGain = null;
+let musicTimer = null;
+let musicStopTimeout = null;
+let musicStep = 0;
+let nextMusicStepTime = 0;
 const tileElements = [];
 let player = { row: 0, column: 0 };
 let playerElement = null;
@@ -155,7 +181,7 @@ let levelCompleteTimeout;
 let ghostTimer;
 let gameTimer;
 
-function playTone(context, note) {
+function playTone(context, note, destination = context.destination) {
     const [startFrequency, endFrequency, duration, waveform, volume, delay = 0] = note;
     const oscillator = context.createOscillator();
     const gain = context.createGain();
@@ -168,9 +194,69 @@ function playTone(context, note) {
     gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
     oscillator.connect(gain);
-    gain.connect(context.destination);
+    gain.connect(destination);
     oscillator.start(startTime);
     oscillator.stop(startTime + duration + 0.02);
+}
+
+function scheduleArcadeMusic() {
+    if (!audioContext || !musicGain || !soundEnabled || gameIsOver) {
+        return;
+    }
+
+    const scheduleUntil = audioContext.currentTime + MUSIC_SCHEDULE_AHEAD;
+
+    while (nextMusicStepTime < scheduleUntil) {
+        const step = ARCADE_MUSIC[musicStep];
+        const delay = Math.max(0, nextMusicStepTime - audioContext.currentTime);
+
+        if (step.melody) {
+            playTone(audioContext, [step.melody, step.melody, 0.19, 'square', 0.12, delay], musicGain);
+        }
+
+        if (step.bass) {
+            playTone(audioContext, [step.bass, step.bass, 0.75, 'triangle', 0.16, delay], musicGain);
+        }
+
+        musicStep = (musicStep + 1) % ARCADE_MUSIC.length;
+        nextMusicStepTime += MUSIC_STEP_DURATION;
+    }
+}
+
+function startArcadeMusic() {
+    if (!soundEnabled || gameIsOver || musicTimer !== null) {
+        return;
+    }
+
+    if (!audioContext) {
+        return;
+    }
+
+    musicGain = audioContext.createGain();
+    musicGain.gain.setValueAtTime(0.0001, audioContext.currentTime);
+    musicGain.gain.setTargetAtTime(0.65, audioContext.currentTime, 0.12);
+    musicGain.connect(audioContext.destination);
+    musicStep = 0;
+    nextMusicStepTime = audioContext.currentTime + 0.05;
+    scheduleArcadeMusic();
+    musicTimer = window.setInterval(scheduleArcadeMusic, MUSIC_SCHEDULE_INTERVAL);
+}
+
+function stopArcadeMusic() {
+    if (musicTimer !== null) {
+        window.clearInterval(musicTimer);
+        musicTimer = null;
+    }
+
+    if (musicGain) {
+        const fadingGain = musicGain;
+        fadingGain.gain.setTargetAtTime(0.0001, audioContext.currentTime, 0.04);
+        musicGain = null;
+        window.clearTimeout(musicStopTimeout);
+        musicStopTimeout = window.setTimeout(() => {
+            fadingGain.disconnect();
+        }, 250);
+    }
 }
 
 function playArcadeSound(name) {
@@ -198,6 +284,10 @@ function playArcadeSound(name) {
         });
     }
 
+    if (!gameIsOver) {
+        startArcadeMusic();
+    }
+
     const notes = ARCADE_NOTES[name];
 
     if (notes) {
@@ -215,6 +305,8 @@ soundToggle.addEventListener('click', () => {
 
     if (soundEnabled) {
         playArcadeSound('powerOn');
+    } else {
+        stopArcadeMusic();
     }
 });
 
@@ -757,6 +849,7 @@ function finishGame(completed, reason = '') {
     }
 
     gameIsOver = true;
+    stopArcadeMusic();
     const hasCompletionSound = completed && playArcadeSound('complete');
     if (!completed) {
         playArcadeSound('gameOver');
@@ -815,6 +908,7 @@ function finishGame(completed, reason = '') {
 }
 
 function resetGame() {
+    stopArcadeMusic();
     window.clearInterval(ghostTimer);
     window.clearInterval(gameTimer);
     window.cancelAnimationFrame(waterCanAnimationFrame);
@@ -842,6 +936,9 @@ function resetGame() {
     nextGhostColor = 'yellow';
     doublePointsUntil = 0;
     secondsRemaining = difficulty.durationSeconds;
+    if (soundEnabled) {
+        playArcadeSound('powerOn');
+    }
     waterCanX = 0;
     waterCanY = 0;
     previousWaterCanFrame = null;
