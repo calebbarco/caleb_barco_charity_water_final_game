@@ -748,6 +748,7 @@ function dig() {
         score += isDoublePointsActive ? 20 : 10;
         targetTile.type = 'air';
         message.textContent = `Clean water found! +${targetTile.gallons} gallons.`;
+        showGameAlert(`Clean water collected! +${targetTile.gallons} gallons.`);
         playArcadeSound('water');
     } else if (targetTile.type === 'dirty-water') {
         const pointsLost = Math.min(score, 100);
